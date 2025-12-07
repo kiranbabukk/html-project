@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WhatsApp Smart Bot Chat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+    margin: 0;
+    background: #e5ddd5;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* Header */
+.header {
+    background: #075E54;
+    color: white;
+    padding: 14px 16px;
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+.header img {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    margin-right: 12px;
+}
+
+/* Chat Area */
+.chat {
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
+/* Message bubbles */
+.bubble {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 15px;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.other {
+    background: #ffffff;
+    border-bottom-left-radius: 0;
+    align-self: flex-start;
+}
+
+.me {
+    background: #d5f9c7;
+    border-bottom-right-radius: 0;
+    align-self: flex-end;
+}
+
+/* Timestamp */
+.timestamp {
+    font-size: 11px;
+    color: #777;
+    margin-top: 4px;
+    text-align: right;
+}
+
+/* Input bar */
+.input-bar {
+    background: #f0f0f0;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#messageInput {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+}
+
+.send-btn {
+    background: #075E54;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    border: none;
+    font-size: 15px;
+}
+
+.send-btn:hover {
+    background: #0b806c;
+}
+
+/* Typing indicator */
+.typing {
+    font-size: 13px;
+    color: #666;
+    margin-left: 6px;
+    opacity: 0.7;
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+    <img src="https://i.imgur.com/1Xq9BiB.png">
+    HR Smart Bot
+</div>
+
+<!-- Chat Area -->
+<div class="chat" id="chatBox">
+
+    <!-- Bot initial message -->
+    <div class="bubble other">
+        Hello! 👋 I’m your HR Smart Bot. How can I assist you today?
+        <div class="timestamp">11:01</div>
+    </div>
+
+</div>
+
+<!-- Input Bar -->
+<div class="input-bar">
+    <input type="text" id="messageInput" placeholder="Type a message">
+    <button class="send-btn" onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+/* MEMORY (for smarter replies) */
+let lastUserMessage = "";
+let conversationMemory = [];
+
+/* SEND MESSAGE */
+function sendMessage() {
+    const input = document.getElementById("messageInput");
+    const chat = document.getElementById("chatBox");
+
+    let text = input.value.trim();
+    if (text === "") return;
+
+    // User bubble
+    const bubble = document.createElement("div");
+    bubble.className = "bubble me";
+    bubble.innerHTML = text + '<div class="timestamp">' + getTime() + '</div>';
+    chat.appendChild(bubble);
+
+    chat.scrollTop = chat.scrollHeight;
+    input.value = "";
+
+    // Typing indicator
+    const typing = document.createElement("div");
+    typing.id = "typingIndicator";
+    typing.className = "bubble other";
+    typing.innerHTML = "<span class='typing'>Typing...</span>";
+    chat.appendChild(typing);
+    chat.scrollTop = chat.scrollHeight;
+
+    // Bot reply after delay
+    setTimeout(() => {
+        typing.remove();
+        botReply(text);
+    }, 1000);
+}
+
+/* BOT REPLY */
+function botReply(userMsg) {
+    const chat = document.getElementById("chatBox");
+
+    let reply = generateBotReply(userMsg.toLowerCase());
+
+    // Bot bubble
+    const bubble = document.createElement("div");
+    bubble.className = "bubble other";
+    bubble.innerHTML = reply + '<div class="timestamp">' + getTime() + '</div>';
+    chat.appendChild(bubble);
+
+    chat.scrollTop = chat.scrollHeight;
+}
+
+/* SMART BOT ENGINE */
+function generateBotReply(msg) {
+
+    lastUserMessage = msg;
+    conversationMemory.push(msg);
+
+    msg = msg.toLowerCase().trim();
+
+    // GREETINGS
+    if (msg.match(/\b(hi|hello|hey|good morning|good evening|good afternoon)\b/)) {
+        return random([
+            "Hello! 😊 How can I help you today?",
+            "Hi there! What can I do for you?",
+            "Hey! I'm here to assist."
+        ]);
+    }
+
+    // HOW ARE YOU
+    if (msg.includes("how are you")) {
+        return random([
+            "I'm doing great, thanks for asking! How about you?",
+            "All good here! How can I help today? 😊",
+            "Feeling awesome! What brings you here?"
+        ]);
+    }
+
+    // EMOTIONS
+    if (msg.includes("sad") || msg.includes("upset") || msg.includes("tired")) {
+        return random([
+            "I'm sorry you're feeling this way. Want to talk about it?",
+            "That sounds difficult. I'm here if you want to share more.",
+        ]);
+    }
+
+    // THANK YOU
+    if (msg.includes("thank")) {
+        return random([
+            "You're welcome! 😊",
+            "Anytime!",
+            "Glad I could help!"
+        ]);
+    }
+
+    // GOODBYE
+    if (msg.includes("bye")) {
+        return random([
+            "Goodbye! Take care. 👋",
+            "See you later!",
+            "Bye! I'm here anytime you need me."
+        ]);
+    }
+
+    // RESIGNATION
+    if (msg.includes("resign") || msg.includes("resignation")) {
+        return random([
+            "Are you asking about resignation? I can guide you on notice period, exit process, or policies.",
+            "Resignation related? Sure! What part do you want to know more about?"
+        ]);
+    }
+
+    // NOTICE PERIOD
+    if (msg.includes("notice")) {
+        return random([
+            "Your standard notice period is 2 months.",
+            "Notice period is usually 60 days.",
+        ]);
+    }
+
+    // EXIT PROCESS
+    if (msg.includes("exit") || msg.includes("handover")) {
+        return random([
+            "Exit process includes KT handover, clearance forms, interviews, and final settlement.",
+            "For handover, document tasks and transfer work to your teammates.",
+        ]);
+    }
+
+    // GENERAL QUESTIONS
+    if (msg.startsWith("why") || msg.startsWith("what") || msg.startsWith("how") || msg.endsWith("?")) {
+        return random([
+            "That's a good question! Can you tell me a bit more?",
+            "Interesting! Want to explain more so I can guide you?",
+            "Let me help — can you share a little more?"
+        ]);
+    }
+
+    // CONTEXTUAL REPLY
+    if (conversationMemory.length > 3) {
+        return random([
+            "I'm following you! Continue…",
+            "Okay, I think I understand. Go on!",
+            "I'm here — tell me more!"
+        ]);
+    }
+
+    // SMART DEFAULT
+    return random([
+        "Hmm… that's interesting! Can you explain more?",
+        "I'm still learning, but I want to help. Tell me more 😊",
+        "Could you describe that a bit further?"
+    ]);
+}
+
+/* RANDOM PICKER */
+function random(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+/* TIME FORMAT */
+function getTime() {
+    const d = new Date();
+    let h = d.getHours();
+    let m = d.getMinutes();
+    if (m < 10) m = "0" + m;
+    return h + ":" + m;
+}
+
+/* Send with Enter Key */
+document.getElementById("messageInput").addEventListener("keypress", function(e){
+    if (e.key === "Enter") sendMessage();
+});
+</script>
+
+</body>
+</html>
+	
